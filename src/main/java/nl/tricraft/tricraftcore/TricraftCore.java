@@ -1,11 +1,15 @@
 package nl.tricraft.tricraftcore;
 
 import nl.tricraft.tricraftcore.database.DatabaseManager;
+import nl.tricraft.tricraftcore.economy.EconomyManager;
+import nl.tricraft.tricraftcore.economy.TricraftEconomyProvider;
 import nl.tricraft.tricraftcore.inventory.WorldInventoryManager;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class TricraftCore extends JavaPlugin {
@@ -14,22 +18,29 @@ public final class TricraftCore extends JavaPlugin {
 
     private DatabaseManager databaseManager;
     private WorldInventoryManager worldInventoryManager;
+    private EconomyManager economyManager;
+    private TricraftEconomyProvider economyProvider;
 
     @Override
     public void onEnable() {
 
         instance = this;
 
-        // Config laden
         saveDefaultConfig();
 
-        // Database starten
+        // ==============================
+        // DATABASE
+        // ==============================
+
         databaseManager =
                 new DatabaseManager(this);
 
         databaseManager.connect();
 
-        // World Inventory starten
+        // ==============================
+        // WORLD INVENTORIES
+        // ==============================
+
         worldInventoryManager =
                 new WorldInventoryManager(this);
 
@@ -39,6 +50,37 @@ public final class TricraftCore extends JavaPlugin {
                         worldInventoryManager,
                         this
                 );
+
+        // ==============================
+        // ECONOMY
+        // ==============================
+
+        if (getConfig().getBoolean(
+                "economy.enabled",
+                true
+        )) {
+
+            economyManager =
+                    new EconomyManager(this);
+
+            economyProvider =
+                    new TricraftEconomyProvider(
+                            economyManager
+                    );
+
+            getServer()
+                    .getServicesManager()
+                    .register(
+                            Economy.class,
+                            economyProvider,
+                            this,
+                            ServicePriority.Highest
+                    );
+
+            getLogger().info(
+                    "TricraftCore Economy geregistreerd via Vault."
+            );
+        }
 
         getLogger().info(
                 "================================="
@@ -62,6 +104,10 @@ public final class TricraftCore extends JavaPlugin {
         );
 
         getLogger().info(
+                "       Economy: AAN"
+        );
+
+        getLogger().info(
                 "================================="
         );
     }
@@ -69,7 +115,16 @@ public final class TricraftCore extends JavaPlugin {
     @Override
     public void onDisable() {
 
-        // Alle online spelers opslaan
+        if (economyProvider != null) {
+
+            getServer()
+                    .getServicesManager()
+                    .unregister(
+                            Economy.class,
+                            economyProvider
+                    );
+        }
+
         if (worldInventoryManager != null) {
 
             for (
@@ -83,9 +138,7 @@ public final class TricraftCore extends JavaPlugin {
             }
         }
 
-        // Database sluiten
         if (databaseManager != null) {
-
             databaseManager.close();
         }
 
@@ -104,6 +157,10 @@ public final class TricraftCore extends JavaPlugin {
 
     public WorldInventoryManager getWorldInventoryManager() {
         return worldInventoryManager;
+    }
+
+    public EconomyManager getEconomyManager() {
+        return economyManager;
     }
 
     @Override
