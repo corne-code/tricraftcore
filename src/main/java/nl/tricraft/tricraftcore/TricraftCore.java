@@ -20,44 +20,78 @@ public final class TricraftCore extends JavaPlugin {
 
         instance = this;
 
+        // Config laden
         saveDefaultConfig();
 
-        // Database
-        databaseManager = new DatabaseManager(this);
+        // Database starten
+        databaseManager =
+                new DatabaseManager(this);
+
         databaseManager.connect();
 
-        // World Inventories
-        worldInventoryManager = new WorldInventoryManager(this);
+        // World Inventory starten
+        worldInventoryManager =
+                new WorldInventoryManager(this);
 
-        getServer().getPluginManager().registerEvents(
-                worldInventoryManager,
-                this
+        getServer()
+                .getPluginManager()
+                .registerEvents(
+                        worldInventoryManager,
+                        this
+                );
+
+        getLogger().info(
+                "================================="
         );
 
-        getLogger().info("=================================");
-        getLogger().info("       TricraftCore gestart");
-        getLogger().info("       Versie: " + getDescription().getVersion());
-        getLogger().info("       Database: AAN");
-        getLogger().info("       World Inventory: AAN");
-        getLogger().info("=================================");
+        getLogger().info(
+                "       TricraftCore gestart"
+        );
+
+        getLogger().info(
+                "       Versie: "
+                        + getDescription().getVersion()
+        );
+
+        getLogger().info(
+                "       Database: AAN"
+        );
+
+        getLogger().info(
+                "       World Inventory: AAN"
+        );
+
+        getLogger().info(
+                "================================="
+        );
     }
 
     @Override
     public void onDisable() {
 
-        // Online spelers opslaan
+        // Alle online spelers opslaan
         if (worldInventoryManager != null) {
-            for (Player player : getServer().getOnlinePlayers()) {
-                worldInventoryManager.savePlayer(player);
+
+            for (
+                    Player player :
+                    getServer().getOnlinePlayers()
+            ) {
+
+                worldInventoryManager.savePlayer(
+                        player
+                );
             }
         }
 
         // Database sluiten
         if (databaseManager != null) {
+
             databaseManager.close();
         }
 
-        getLogger().info("TricraftCore uitgeschakeld.");
+        getLogger().info(
+                "TricraftCore uitgeschakeld."
+        );
     }
 
     public static TricraftCore getInstance() {
@@ -80,36 +114,49 @@ public final class TricraftCore extends JavaPlugin {
             String[] args
     ) {
 
-        if (!command.getName().equalsIgnoreCase("tricraft")) {
+        if (!command.getName()
+                .equalsIgnoreCase("tricraft")) {
+
             return false;
         }
 
         if (args.length == 0) {
 
             sender.sendMessage(
-                    ChatColor.AQUA + "§lTricraftCore"
+                    ChatColor.AQUA
+                            + "§lTricraftCore"
             );
 
             sender.sendMessage(
-                    ChatColor.GRAY + "Versie: "
+                    ChatColor.GRAY
+                            + "Versie: "
                             + ChatColor.WHITE
-                            + getDescription().getVersion()
+                            + getDescription()
+                            .getVersion()
             );
 
             sender.sendMessage("");
+
             sender.sendMessage(
-                    ChatColor.GRAY + "/tricraft reload"
+                    ChatColor.GRAY
+                            + "/tricraft reload"
             );
 
             return true;
         }
 
-        if (args[0].equalsIgnoreCase("reload")) {
+        if (args[0]
+                .equalsIgnoreCase("reload")) {
 
-            if (!sender.hasPermission("tricraft.admin")) {
+            if (!sender.hasPermission(
+                    "tricraft.admin"
+            )) {
+
                 sender.sendMessage(
-                        ChatColor.RED + "Je hebt geen toestemming."
+                        ChatColor.RED
+                                + "Je hebt geen toestemming."
                 );
+
                 return true;
             }
 
@@ -117,14 +164,16 @@ public final class TricraftCore extends JavaPlugin {
 
             sender.sendMessage(
                     ChatColor.GREEN
-                            + "TricraftCore configuratie opnieuw geladen."
+                            + "TricraftCore configuratie "
+                            + "opnieuw geladen."
             );
 
             return true;
         }
 
         sender.sendMessage(
-                ChatColor.RED + "Onbekend commando."
+                ChatColor.RED
+                        + "Onbekend commando."
         );
 
         return true;
