@@ -2,6 +2,7 @@ package nl.tricraft.tricraftcore.economy;
 
 import nl.tricraft.tricraftcore.TricraftCore;
 import nl.tricraft.tricraftcore.database.DatabaseManager;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -24,7 +25,12 @@ public class EconomyManager {
         return getBalance(player.getUniqueId());
     }
 
+    public double getBalance(OfflinePlayer player) {
+        return getBalance(player.getUniqueId());
+    }
+
     public void setBalance(UUID uuid, double amount) {
+
         if (amount < 0) {
             amount = 0;
         }
@@ -36,20 +42,42 @@ public class EconomyManager {
         setBalance(player.getUniqueId(), amount);
     }
 
+    public void setBalance(
+            OfflinePlayer player,
+            double amount
+    ) {
+        setBalance(player.getUniqueId(), amount);
+    }
+
     public void deposit(UUID uuid, double amount) {
+
         if (amount <= 0) {
             return;
         }
 
         double current = getBalance(uuid);
-        setBalance(uuid, current + amount);
+
+        setBalance(
+                uuid,
+                current + amount
+        );
     }
 
-    public void deposit(Player player, double amount) {
-        deposit(player.getUniqueId(), amount);
+    public void deposit(
+            OfflinePlayer player,
+            double amount
+    ) {
+        deposit(
+                player.getUniqueId(),
+                amount
+        );
     }
 
-    public boolean withdraw(UUID uuid, double amount) {
+    public boolean withdraw(
+            UUID uuid,
+            double amount
+    ) {
+
         if (amount <= 0) {
             return false;
         }
@@ -60,35 +88,71 @@ public class EconomyManager {
             return false;
         }
 
-        setBalance(uuid, current - amount);
+        setBalance(
+                uuid,
+                current - amount
+        );
+
         return true;
     }
 
-    public boolean withdraw(Player player, double amount) {
-        return withdraw(player.getUniqueId(), amount);
+    public boolean withdraw(
+            OfflinePlayer player,
+            double amount
+    ) {
+        return withdraw(
+                player.getUniqueId(),
+                amount
+        );
     }
 
-    public boolean has(UUID uuid, double amount) {
+    public boolean has(
+            UUID uuid,
+            double amount
+    ) {
         return getBalance(uuid) >= amount;
     }
 
-    public boolean has(Player player, double amount) {
-        return has(player.getUniqueId(), amount);
+    public boolean has(
+            OfflinePlayer player,
+            double amount
+    ) {
+        return has(
+                player.getUniqueId(),
+                amount
+        );
     }
 
-    public double getStartingMoney() {
-        return plugin.getConfig().getDouble(
-                "economy.starting-money",
-                100.0
+    public boolean createAccount(
+            OfflinePlayer player
+    ) {
+        database.getBalance(
+                player.getUniqueId()
         );
+
+        return true;
     }
 
     public String format(double amount) {
-        String currency = plugin.getConfig().getString(
+
+        String currency =
+                plugin.getConfig().getString(
+                        "economy.currency",
+                        "$"
+                );
+
+        return currency +
+                String.format(
+                        "%.2f",
+                        amount
+                );
+    }
+
+    public String getCurrency() {
+
+        return plugin.getConfig().getString(
                 "economy.currency",
                 "$"
         );
-
-        return currency + String.format("%.2f", amount);
     }
 }
