@@ -21,12 +21,15 @@ public class DatabaseManager {
     }
 
     public void connect() {
+
         try {
-            File databaseFile = new File(plugin.getDataFolder(), "tricraft.db");
 
             if (!plugin.getDataFolder().exists()) {
                 plugin.getDataFolder().mkdirs();
             }
+
+            File databaseFile =
+                    new File(plugin.getDataFolder(), "tricraft.db");
 
             connection = DriverManager.getConnection(
                     "jdbc:sqlite:" + databaseFile.getAbsolutePath()
@@ -34,9 +37,16 @@ public class DatabaseManager {
 
             createTables();
 
-            plugin.getLogger().info("Database verbonden.");
+            plugin.getLogger().info(
+                    "TricraftCore database verbonden."
+            );
+
         } catch (SQLException e) {
-            plugin.getLogger().severe("Database kon niet worden geopend.");
+
+            plugin.getLogger().severe(
+                    "De TricraftCore database kon niet worden geopend."
+            );
+
             e.printStackTrace();
         }
     }
@@ -65,6 +75,10 @@ public class DatabaseManager {
             String armor
     ) {
 
+        if (connection == null) {
+            return;
+        }
+
         String sql = """
                 INSERT INTO world_inventories
                 (uuid, world, inventory, armor)
@@ -86,9 +100,11 @@ public class DatabaseManager {
             statement.executeUpdate();
 
         } catch (SQLException e) {
+
             plugin.getLogger().severe(
                     "Inventory kon niet worden opgeslagen."
             );
+
             e.printStackTrace();
         }
     }
@@ -97,6 +113,10 @@ public class DatabaseManager {
             UUID uuid,
             String world
     ) {
+
+        if (connection == null) {
+            return null;
+        }
 
         String sql = """
                 SELECT inventory, armor
@@ -122,9 +142,11 @@ public class DatabaseManager {
             }
 
         } catch (SQLException e) {
+
             plugin.getLogger().severe(
                     "Inventory kon niet worden geladen."
             );
+
             e.printStackTrace();
         }
 
@@ -133,18 +155,21 @@ public class DatabaseManager {
 
     public void close() {
 
-        if (connection != null) {
+        if (connection == null) {
+            return;
+        }
 
-            try {
-                connection.close();
+        try {
 
-                plugin.getLogger().info(
-                        "Database verbinding gesloten."
-                );
+            connection.close();
 
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            plugin.getLogger().info(
+                    "TricraftCore database gesloten."
+            );
+
+        } catch (SQLException e) {
+
+            e.printStackTrace();
         }
     }
 
