@@ -5,6 +5,9 @@ api-version: '26.2'
 author: Corné
 description: Custom core plugin for the Tricraft Minecraft server
 
+depend:
+  - Vault
+
 commands:
   tricraft:
     description: TricraftCore hoofdcommand
