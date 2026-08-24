@@ -1,0 +1,18 @@
+name: TricraftCore
+version: 1.0.0
+main: nl.tricraft.tricraftcore.TricraftCore
+api-version: '26.2'
+author: Corné
+description: Custom core plugin for the Tricraft Minecraft server
+
+commands:
+  tricraft:
+    description: TricraftCore hoofdcommand
+    usage: /tricraft
+    aliases:
+      - tc
+
+permissions:
+  tricraft.admin:
+    description: Toegang tot TricraftCore beheer
+    default: op
