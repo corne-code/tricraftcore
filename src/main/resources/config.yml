@@ -5,44 +5,103 @@
 server:
   name: "Tricraft"
 
-# Werelden met een aparte inventory
+# ==========================================
+# WORLD INVENTORIES
+# ==========================================
+
 world-inventory:
+
+  # World inventory systeem aan/uit
   enabled: true
 
+  # Iedere wereld hieronder krijgt een eigen inventory.
+  #
+  # Hub:
+  #   eigen Hub inventory
+  #
+  # world:
+  #   eigen Survival inventory
+  #
+  # skyblock_world:
+  #   eigen Skyblock inventory
+  #
   worlds:
     - Hub
     - world
     - skyblock_world
-# Economy
+
+
+# ==========================================
+# ECONOMY
+# ==========================================
+
 economy:
+
   enabled: true
+
   starting-money: 100.0
+
   currency: "$"
 
-# Claims
+
+# ==========================================
+# CLAIMS
+# ==========================================
+
 claims:
+
   enabled: true
 
-# Portals
+
+# ==========================================
+# PORTALS
+# ==========================================
+
 portals:
+
   enabled: true
 
+
+# ==========================================
 # NPC
+# ==========================================
+
 npc:
+
   enabled: true
 
-# Shop
+
+# ==========================================
+# SHOP
+# ==========================================
+
 shop:
+
   enabled: true
 
-# PvP
+
+# ==========================================
+# PVP
+# ==========================================
+
 pvp:
+
   enabled: true
 
-# Skyblock
+
+# ==========================================
+# SKYBLOCK
+# ==========================================
+
 skyblock:
+
   enabled: true
 
-# Voice chat
+
+# ==========================================
+# VOICE CHAT
+# ==========================================
+
 voice-chat:
+
   enabled: true
