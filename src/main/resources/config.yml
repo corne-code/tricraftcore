@@ -1,0 +1,48 @@
+# ==========================================
+# TricraftCore
+# ==========================================
+
+server:
+  name: "Tricraft"
+
+# Werelden met een aparte inventory
+world-inventory:
+  enabled: true
+
+  worlds:
+    - Hub
+    - world
+    - skyblock_world
+# Economy
+economy:
+  enabled: true
+  starting-money: 100.0
+  currency: "$"
+
+# Claims
+claims:
+  enabled: true
+
+# Portals
+portals:
+  enabled: true
+
+# NPC
+npc:
+  enabled: true
+
+# Shop
+shop:
+  enabled: true
+
+# PvP
+pvp:
+  enabled: true
+
+# Skyblock
+skyblock:
+  enabled: true
+
+# Voice chat
+voice-chat:
+  enabled: true
