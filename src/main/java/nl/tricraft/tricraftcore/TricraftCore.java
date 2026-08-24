@@ -1,15 +1,18 @@
 package nl.tricraft.tricraftcore;
 
+import nl.tricraft.tricraftcore.database.DatabaseManager;
 import nl.tricraft.tricraftcore.inventory.WorldInventoryManager;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class TricraftCore extends JavaPlugin {
 
     private static TricraftCore instance;
 
+    private DatabaseManager databaseManager;
     private WorldInventoryManager worldInventoryManager;
 
     @Override
@@ -19,7 +22,11 @@ public final class TricraftCore extends JavaPlugin {
 
         saveDefaultConfig();
 
-        // World Inventory
+        // Database
+        databaseManager = new DatabaseManager(this);
+        databaseManager.connect();
+
+        // World Inventories
         worldInventoryManager = new WorldInventoryManager(this);
 
         getServer().getPluginManager().registerEvents(
@@ -30,6 +37,7 @@ public final class TricraftCore extends JavaPlugin {
         getLogger().info("=================================");
         getLogger().info("       TricraftCore gestart");
         getLogger().info("       Versie: " + getDescription().getVersion());
+        getLogger().info("       Database: AAN");
         getLogger().info("       World Inventory: AAN");
         getLogger().info("=================================");
     }
@@ -37,11 +45,27 @@ public final class TricraftCore extends JavaPlugin {
     @Override
     public void onDisable() {
 
-        getLogger().info("TricraftCore wordt uitgeschakeld.");
+        // Online spelers opslaan
+        if (worldInventoryManager != null) {
+            for (Player player : getServer().getOnlinePlayers()) {
+                worldInventoryManager.savePlayer(player);
+            }
+        }
+
+        // Database sluiten
+        if (databaseManager != null) {
+            databaseManager.close();
+        }
+
+        getLogger().info("TricraftCore uitgeschakeld.");
     }
 
     public static TricraftCore getInstance() {
         return instance;
+    }
+
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
     }
 
     public WorldInventoryManager getWorldInventoryManager() {
@@ -83,12 +107,9 @@ public final class TricraftCore extends JavaPlugin {
         if (args[0].equalsIgnoreCase("reload")) {
 
             if (!sender.hasPermission("tricraft.admin")) {
-
                 sender.sendMessage(
-                        ChatColor.RED
-                                + "Je hebt geen toestemming."
+                        ChatColor.RED + "Je hebt geen toestemming."
                 );
-
                 return true;
             }
 
