@@ -1,3 +1,8 @@
+import net.milkbowl.vault.economy.AbstractEconomy;
+import net.milkbowl.vault.economy.EconomyResponse;
+import org.bukkit.OfflinePlayer;
+
+import java.util.List;
 package nl.tricraft.tricraftcore.economy;
 
 import net.milkbowl.vault.economy.AbstractEconomy;
