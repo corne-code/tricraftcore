@@ -22,6 +22,8 @@ import java.util.UUID;
 
 public class WorldInventoryManager implements Listener {
 
+    private static final String SHARED_INVENTORY = "__SHARED__";
+
     private final TricraftCore plugin;
     private final DatabaseManager database;
 
@@ -30,60 +32,132 @@ public class WorldInventoryManager implements Listener {
         this.database = plugin.getDatabaseManager();
     }
 
+    /**
+     * Controleert of een wereld een eigen inventory heeft.
+     */
+    private boolean hasSeparateInventory(World world) {
+
+        if (!plugin.getConfig().getBoolean(
+                "world-inventory.enabled",
+                true
+        )) {
+            return false;
+        }
+
+        return plugin.getConfig().getStringList(
+                "world-inventory.worlds"
+        ).contains(world.getName());
+    }
+
+    /**
+     * Bepaalt waar de inventory van een wereld wordt opgeslagen.
+     */
+    private String getInventoryKey(World world) {
+
+        if (hasSeparateInventory(world)) {
+            return world.getName();
+        }
+
+        return SHARED_INVENTORY;
+    }
+
+    /**
+     * Speler komt de server binnen.
+     */
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
 
         Player player = event.getPlayer();
 
         Bukkit.getScheduler().runTask(plugin, () -> {
-            loadInventory(player, player.getWorld());
+
+            loadInventory(
+                    player,
+                    player.getWorld()
+            );
         });
     }
 
+    /**
+     * Speler verandert van wereld.
+     */
     @EventHandler
     public void onWorldChange(PlayerChangedWorldEvent event) {
 
         Player player = event.getPlayer();
 
-        // Inventory van de vorige wereld opslaan
-        saveInventory(player, event.getFrom());
+        World oldWorld = event.getFrom();
+        World newWorld = player.getWorld();
 
-        // Inventory van de nieuwe wereld laden
+        // Oude inventory opslaan
+        saveInventory(
+                player,
+                oldWorld
+        );
+
+        // Nieuwe inventory laden
         Bukkit.getScheduler().runTask(plugin, () -> {
-            loadInventory(player, player.getWorld());
+
+            loadInventory(
+                    player,
+                    newWorld
+            );
         });
     }
 
+    /**
+     * Speler verlaat de server.
+     */
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
 
         Player player = event.getPlayer();
 
-        saveInventory(player, player.getWorld());
+        saveInventory(
+                player,
+                player.getWorld()
+        );
     }
 
+    /**
+     * Wordt gebruikt wanneer de server wordt afgesloten.
+     */
     public void savePlayer(Player player) {
-        saveInventory(player, player.getWorld());
+
+        saveInventory(
+                player,
+                player.getWorld()
+        );
     }
 
-    private void saveInventory(Player player, World world) {
+    /**
+     * Inventory opslaan.
+     */
+    private void saveInventory(
+            Player player,
+            World world
+    ) {
 
         try {
 
             UUID uuid = player.getUniqueId();
-            String worldName = world.getName();
 
-            String inventory = serialize(
-                    player.getInventory().getContents()
-            );
+            String inventoryKey =
+                    getInventoryKey(world);
 
-            String armor = serialize(
-                    player.getInventory().getArmorContents()
-            );
+            String inventory =
+                    serialize(
+                            player.getInventory().getContents()
+                    );
+
+            String armor =
+                    serialize(
+                            player.getInventory().getArmorContents()
+                    );
 
             database.saveInventory(
                     uuid,
-                    worldName,
+                    inventoryKey,
                     inventory,
                     armor
             );
@@ -100,36 +174,62 @@ public class WorldInventoryManager implements Listener {
         }
     }
 
-    private void loadInventory(Player player, World world) {
+    /**
+     * Inventory laden.
+     */
+    private void loadInventory(
+            Player player,
+            World world
+    ) {
 
         try {
 
             UUID uuid = player.getUniqueId();
-            String worldName = world.getName();
+
+            String inventoryKey =
+                    getInventoryKey(world);
 
             DatabaseManager.InventoryData data =
-                    database.loadInventory(uuid, worldName);
+                    database.loadInventory(
+                            uuid,
+                            inventoryKey
+                    );
 
-            // Geen opgeslagen inventory?
-            // Dan laten we de bestaande inventory gewoon staan.
+            // Eerst huidige inventory verwijderen.
+            player.getInventory().clear();
+            player.getInventory().setArmorContents(null);
+
+            // Als er nog geen inventory bestaat,
+            // krijgt de speler een lege inventory.
             if (data == null) {
+
+                player.updateInventory();
+
                 return;
             }
 
             ItemStack[] contents =
-                    deserialize(data.inventory());
+                    deserialize(
+                            data.inventory()
+                    );
 
             ItemStack[] armor =
-                    deserialize(data.armor());
-
-            player.getInventory().clear();
+                    deserialize(
+                            data.armor()
+                    );
 
             if (contents != null) {
-                player.getInventory().setContents(contents);
+
+                player.getInventory().setContents(
+                        contents
+                );
             }
 
             if (armor != null) {
-                player.getInventory().setArmorContents(armor);
+
+                player.getInventory().setArmorContents(
+                        armor
+                );
             }
 
             player.updateInventory();
@@ -146,13 +246,20 @@ public class WorldInventoryManager implements Listener {
         }
     }
 
-    private String serialize(ItemStack[] items) throws IOException {
+    /**
+     * ItemStack[] omzetten naar tekst voor SQLite.
+     */
+    private String serialize(
+            ItemStack[] items
+    ) throws IOException {
 
         ByteArrayOutputStream outputStream =
                 new ByteArrayOutputStream();
 
         try (BukkitObjectOutputStream output =
-                     new BukkitObjectOutputStream(outputStream)) {
+                     new BukkitObjectOutputStream(
+                             outputStream
+                     )) {
 
             output.writeObject(items);
         }
@@ -162,8 +269,12 @@ public class WorldInventoryManager implements Listener {
         );
     }
 
-    private ItemStack[] deserialize(String data)
-            throws IOException, ClassNotFoundException {
+    /**
+     * Tekst uit SQLite terug omzetten naar ItemStack[].
+     */
+    private ItemStack[] deserialize(
+            String data
+    ) throws IOException, ClassNotFoundException {
 
         if (data == null || data.isEmpty()) {
             return null;
