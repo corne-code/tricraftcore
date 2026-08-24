@@ -21,9 +21,7 @@ public class DatabaseManager {
     }
 
     public void connect() {
-
         try {
-
             if (!plugin.getDataFolder().exists()) {
                 plugin.getDataFolder().mkdirs();
             }
@@ -42,18 +40,16 @@ public class DatabaseManager {
             );
 
         } catch (SQLException e) {
-
             plugin.getLogger().severe(
-                    "De TricraftCore database kon niet worden geopend."
+                    "Database kon niet worden geopend."
             );
-
             e.printStackTrace();
         }
     }
 
     private void createTables() throws SQLException {
 
-        String sql = """
+        String inventorySql = """
                 CREATE TABLE IF NOT EXISTS world_inventories (
                     uuid TEXT NOT NULL,
                     world TEXT NOT NULL,
@@ -63,8 +59,16 @@ public class DatabaseManager {
                 );
                 """;
 
+        String economySql = """
+                CREATE TABLE IF NOT EXISTS economy (
+                    uuid TEXT PRIMARY KEY,
+                    balance REAL NOT NULL DEFAULT 100.0
+                );
+                """;
+
         try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate(sql);
+            statement.executeUpdate(inventorySql);
+            statement.executeUpdate(economySql);
         }
     }
 
@@ -74,7 +78,6 @@ public class DatabaseManager {
             String inventory,
             String armor
     ) {
-
         if (connection == null) {
             return;
         }
@@ -100,11 +103,9 @@ public class DatabaseManager {
             statement.executeUpdate();
 
         } catch (SQLException e) {
-
             plugin.getLogger().severe(
                     "Inventory kon niet worden opgeslagen."
             );
-
             e.printStackTrace();
         }
     }
@@ -113,7 +114,6 @@ public class DatabaseManager {
             UUID uuid,
             String world
     ) {
-
         if (connection == null) {
             return null;
         }
@@ -133,7 +133,6 @@ public class DatabaseManager {
             try (ResultSet result = statement.executeQuery()) {
 
                 if (result.next()) {
-
                     return new InventoryData(
                             result.getString("inventory"),
                             result.getString("armor")
@@ -142,15 +141,81 @@ public class DatabaseManager {
             }
 
         } catch (SQLException e) {
-
             plugin.getLogger().severe(
                     "Inventory kon niet worden geladen."
             );
-
             e.printStackTrace();
         }
 
         return null;
+    }
+
+    public double getBalance(UUID uuid) {
+
+        String sql = """
+                SELECT balance
+                FROM economy
+                WHERE uuid = ?
+                """;
+
+        try (PreparedStatement statement =
+                     connection.prepareStatement(sql)) {
+
+            statement.setString(1, uuid.toString());
+
+            try (ResultSet result = statement.executeQuery()) {
+
+                if (result.next()) {
+                    return result.getDouble("balance");
+                }
+            }
+
+        } catch (SQLException e) {
+            plugin.getLogger().severe(
+                    "Saldo kon niet worden geladen."
+            );
+            e.printStackTrace();
+        }
+
+        double startingMoney =
+                plugin.getConfig().getDouble(
+                        "economy.starting-money",
+                        100.0
+                );
+
+        setBalance(uuid, startingMoney);
+
+        return startingMoney;
+    }
+
+    public void setBalance(UUID uuid, double amount) {
+
+        if (connection == null) {
+            return;
+        }
+
+        String sql = """
+                INSERT INTO economy
+                (uuid, balance)
+                VALUES (?, ?)
+                ON CONFLICT(uuid)
+                DO UPDATE SET balance = excluded.balance;
+                """;
+
+        try (PreparedStatement statement =
+                     connection.prepareStatement(sql)) {
+
+            statement.setString(1, uuid.toString());
+            statement.setDouble(2, amount);
+
+            statement.executeUpdate();
+
+        } catch (SQLException e) {
+            plugin.getLogger().severe(
+                    "Saldo kon niet worden opgeslagen."
+            );
+            e.printStackTrace();
+        }
     }
 
     public void close() {
@@ -160,7 +225,6 @@ public class DatabaseManager {
         }
 
         try {
-
             connection.close();
 
             plugin.getLogger().info(
@@ -168,7 +232,6 @@ public class DatabaseManager {
             );
 
         } catch (SQLException e) {
-
             e.printStackTrace();
         }
     }
